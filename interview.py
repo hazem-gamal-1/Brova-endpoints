@@ -76,7 +76,6 @@ class Interview:
         return " ".join([doc.page_content for doc in docs])
 
     def start(self):
-
         res = agent.invoke(
             {
                 "messages": [
@@ -91,7 +90,6 @@ class Interview:
         return res
 
     def answer(self, candidate_response: str):
-        """Provide the candidate's answer to continue the interview."""
         res = agent.invoke(
             {
                 "messages": [

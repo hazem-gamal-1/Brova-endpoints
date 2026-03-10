@@ -1,0 +1,11 @@
+langchain-community
+pypdf
+fastapi
+uvicorn
+pydantic
+langchain
+langchain_openai
+langchain-community
+langgraph
+elevenlabs
+python-dotenv
