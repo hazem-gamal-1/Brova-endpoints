@@ -1,4 +1,5 @@
 import base64
+from unittest import result
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict
@@ -71,7 +72,8 @@ async def start_interview(
             "interviewer_personality": interviewer_personality,
         }
 
-        first_resp = engine.start()
+        result = engine.start()
+        first_resp = result["structured_response"]
         question_text = (
             first_resp.content if hasattr(first_resp, "content") else str(first_resp)
         )
@@ -84,6 +86,7 @@ async def start_interview(
             "session_id": session_id,
             "question_text": question_text,
             "audio_base64": audio_b64,
+            "full_response": result["structured_response"],
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -117,8 +120,9 @@ async def submit_answer_audio(
             raise HTTPException(status_code=400, detail="Interview not started")
 
         result = engine.answer(transcription)
+        answer = result["structured_response"]
 
-        question_text = result.content if hasattr(result, "content") else str(result)
+        question_text = answer.content if hasattr(answer, "content") else str(answer)
         audio_bytes = audio_component.convert_text_to_speech(question_text)
         audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
 
@@ -126,6 +130,7 @@ async def submit_answer_audio(
             "session_id": session_id,
             "question_text": question_text,
             "audio_base64": audio_b64,
+            "full_response": result["structured_response"],
         }
 
     except Exception as e:

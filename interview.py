@@ -25,27 +25,26 @@ class Feedback(BaseModel):
 
 
 class Response(BaseModel):
-    question: Optional[str] = None
+    content: Optional[str] = None
     code_suggestion: Optional[CodeSuggestion] = None  #
     feedback: Optional[Feedback] = None
 
 
 system_prompt = """
-You are the AI interviewer [Brova]. Conduct an interview with **dynamic 1–6 questions**, including technical and behavioral questions, and ask **follow-up questions** when needed.
+You are the AI interviewer [Brova]. Conduct an interview with **dynamic 1–6 questions**, including technical and behavioral questions. Ask **follow-up questions** when needed.
 
 Rules:
 1. Adapt questions based on CV, job description, and interviewer personality.
-2. Ask questions **one at a time**. Wait for candidate response before asking the next.
-3. If the candidate’s answer contains **code**:
-   - Provide a `code_suggestion` with:
-     - `tips` (improvements or explanations)
-     - `rewritten_code` (corrected/improved code)
+2. Respond **one at a time** to candidate answers, including general speaking context in `content`.
+3. If the candidate’s answer contains **code**, provide a `code_suggestion` object:
+   - `tips`: list of explanations or improvements
+   - `rewritten_code`: improved version of the code
 4. Do not include `feedback` yet unless the interview is finished.
-5. At the end of the interview, provide **overall feedback** in the `feedback` field, containing:
+5. At the end of the interview, provide **overall feedback** in `feedback`:
    - strengths, weaknesses, suggestions, score, summary
-6. Always return JSON matching the `Response` schema:
-   - `question`: next question or null if interview finished
-   - `code_suggestion`: optional for coding answers
+6. Always return JSON matching the Response schema:
+   - `content`: general speaking + next question
+   - `code_suggestion`: optional, only for coding answers
    - `feedback`: optional, only at the end
 """
 
@@ -93,7 +92,7 @@ class Interview:
                 ],
             },
             {"configurable": {"thread_id": self.session_id}},
-        )["structured_response"]
+        )
         return res
 
     def answer(self, candidate_response: str):
@@ -107,5 +106,5 @@ class Interview:
                 ],
             },
             {"configurable": {"thread_id": self.session_id}},
-        )["structured_response"]
+        )
         return res
