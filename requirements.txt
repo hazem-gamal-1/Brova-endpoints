@@ -9,3 +9,4 @@ langchain-community
 langgraph
 elevenlabs
 python-dotenv
+langchain_google_genai

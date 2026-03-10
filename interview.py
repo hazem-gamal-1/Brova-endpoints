@@ -3,8 +3,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_community.document_loaders.pdf import PyPDFLoader
 from pydantic import BaseModel
-from typing import List
-from enum import Enum
+from typing import List, Optional
 from langchain.agents.structured_output import ToolStrategy
 from dotenv import load_dotenv
 
@@ -12,36 +11,44 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class Status(str, Enum):
-    starting = "starting"
-    technical_question = "technical_question"
-    technical_followup = "technical_followup"
-    behavioral_question = "behavioral_question"
-    behavioral_followup = "behavioral_followup"
-    finished = "finished"
+class CodeSuggestion(BaseModel):
+    tips: List[str]
+    rewritten_code: str
+
+
+class Feedback(BaseModel):
+    strengths: List[str]
+    weaknesses: List[str]
+    suggestions: List[str]
+    score: float
+    summary: str
 
 
 class Response(BaseModel):
-    """Agent response schema."""
-
-    content: str  # Question or feedback to show
-    status: Status
-    interview_finished: bool
-    questions_asked: int = 0  # 0-4 progress
-    strengths: List[str] = []  # Only when finished
-    weaknesses: List[str] = []
-    role_fit: str = ""  # Only when finished
+    question: Optional[str] = None
+    code_suggestion: Optional[CodeSuggestion] = None  #
+    feedback: Optional[Feedback] = None
 
 
-system_prompt = (
-    """
-You are interviewer [Brova]. Follow EXACTLY: 1 tech Q → followup → 1 behavioral Q → followup → feedback.
+system_prompt = """
+You are the AI interviewer [Brova]. Conduct an interview with **dynamic 1–6 questions**, including technical and behavioral questions, and ask **follow-up questions** when needed.
 
-ALWAYS respond as JSON matching schema above.
+Rules:
+1. Adapt questions based on CV, job description, and interviewer personality.
+2. Ask questions **one at a time**. Wait for candidate response before asking the next.
+3. If the candidate’s answer contains **code**:
+   - Provide a `code_suggestion` with:
+     - `tips` (improvements or explanations)
+     - `rewritten_code` (corrected/improved code)
+4. Do not include `feedback` yet unless the interview is finished.
+5. At the end of the interview, provide **overall feedback** in the `feedback` field, containing:
+   - strengths, weaknesses, suggestions, score, summary
+6. Always return JSON matching the `Response` schema:
+   - `question`: next question or null if interview finished
+   - `code_suggestion`: optional for coding answers
+   - `feedback`: optional, only at the end
+"""
 
-Update status/fields based on history. Set interview_finished=true only after both Qs + followups.
-""",
-)
 
 model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
 checkpointer = InMemorySaver()
