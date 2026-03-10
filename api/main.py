@@ -97,6 +97,7 @@ async def start_interview(
 async def submit_answer_audio(
     session_id: str = Form(...),
     audio_file: UploadFile = File(...),
+    code: str = Form(...),
 ):
 
     try:
@@ -113,6 +114,8 @@ async def submit_answer_audio(
 
         # convert to text
         transcription = audio_component.convert_speech_to_text(audio_path)
+        transcription = transcription + f"  {code}"
+
         os.remove(audio_path)
 
         engine = interview_sessions[session_id].get("engine")
