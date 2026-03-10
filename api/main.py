@@ -75,7 +75,9 @@ async def start_interview(
         result = engine.start()
         first_resp = result["structured_response"]
         question_text = (
-            first_resp.content if hasattr(first_resp, "content") else str(first_resp)
+            first_resp.content
+            if hasattr(first_resp, "content") and first_resp.content
+            else str(first_resp.feedback.summary)
         )
 
         # convert to audio
@@ -125,7 +127,11 @@ async def submit_answer_audio(
         result = engine.answer(transcription)
         answer = result["structured_response"]
 
-        question_text = answer.content if hasattr(answer, "content") else str(answer)
+        question_text = (
+            answer.content
+            if hasattr(answer, "content") and answer.content
+            else str(answer.feedback.summary)
+        )
         audio_bytes = audio_component.convert_text_to_speech(question_text)
         audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
 
