@@ -12,7 +12,6 @@ load_dotenv()
 
 
 class CodeSuggestion(BaseModel):
-    tips: List[str]
     rewritten_code: str
 
 
