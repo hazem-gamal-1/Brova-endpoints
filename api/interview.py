@@ -1,12 +1,12 @@
 from langchain.agents import create_agent
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_community.document_loaders.pdf import PyPDFLoader
 from pydantic import BaseModel
 from typing import List, Optional
 from langchain.agents.structured_output import ToolStrategy
 from dotenv import load_dotenv
-
+import os
 
 load_dotenv()
 
@@ -48,7 +48,14 @@ Rules:
 """
 
 
-model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
+model = ChatOpenAI(
+    model="gpt-4o",
+    api_key=os.getenv("GITHUB_TOKEN"),
+    base_url="https://models.inference.ai.azure.com",
+    temperature=0.8,
+)
+
+
 checkpointer = InMemorySaver()
 
 
