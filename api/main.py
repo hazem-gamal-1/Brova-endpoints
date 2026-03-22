@@ -1,13 +1,11 @@
 import base64
-from unittest import result
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict
-import uvicorn
 import os
 import uuid
-from interview import Interview
-from interview_audio_component import InterviewAudioComponent
+from api.interview import Interview
+from api.interview_audio_component import InterviewAudioComponent
 
 app = FastAPI(title="AI Interview API", version="1.0.0")
 
