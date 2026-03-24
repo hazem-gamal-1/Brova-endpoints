@@ -4,16 +4,13 @@ from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv
 
 load_dotenv()
-voices = {
-    "en": {"male": "TX3LPaxmHKxFdv7VOQHJ", "female": "hpp4J3VqNfWAUOO0d1Us"},
-    "ar": {"male": "IES4nrmZdUBHByLBde0P", "female": "meAbY2VpJkt1q46qk56T"},
-}
+voices = {"male": "JBFqnCBsd6RMkjVDRZzb", "female": "FGY2WhTYpPnrIDTdsKH5"}
 
 
 class InterviewAudioComponent:
-    def __init__(self, language, gender):
+    def __init__(self, gender):
         self.elevenlabs = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
-        self.voice_id = voices[language][gender]
+        self.voice_id = voices[gender]
         self.model_id = "eleven_multilingual_v2"
 
     def convert_speech_to_text(self, audio_file_path: str) -> str:

@@ -94,7 +94,7 @@ async def start_interview(
             "status": "in_progress",
             "job_description": job_description,
             "interviewer_personality": interviewer_personality,
-            "audio_component": InterviewAudioComponent(language, gender),
+            "audio_component": InterviewAudioComponent(gender),
         }
         return {
             "session_id": session_id,
