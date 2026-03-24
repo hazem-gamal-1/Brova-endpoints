@@ -47,7 +47,7 @@ class Interview:
         cv_path: str,
         job_description: str,
         interviewer_personality: str = "Friendly",
-        language: str = "ar",
+        language: str = "arabic",
     ):
         self.session_id = session_id
         self.cv_file_path = cv_path
@@ -66,7 +66,7 @@ class Interview:
         system_prompt = f""" 
             You are the AI interviewer [Brova]. (introduce yourself as Brova - AI interviewer)
 
-            Interview language: {"استخدم العربي  بس" if language=="ar" else "English"}
+            Interview language: {"استخدم العربي  بس" if language=="arabic" else "English"}
 
             Conduct an interview with **dynamic 1–6 questions**, including technical and behavioral questions.
             Ask **follow-up questions** when needed.
