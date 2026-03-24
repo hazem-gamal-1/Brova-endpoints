@@ -29,24 +29,6 @@ class Response(BaseModel):
     feedback: Optional[Feedback] = None
 
 
-system_prompt = """
-You are the AI interviewer [Brova].(introduce yourself to the user as Brova - AI interviewer) Conduct an interview with **dynamic 1–6 questions**, including technical and behavioral questions. Ask **follow-up questions** when needed.
-
-Rules:
-1. Questions based on CV, job description, and interviewer personality.
-2. Respond **one at a time** to candidate answers, including general speaking context in `content`.
-3. If the candidate’s answer contains **code**, provide a `code_suggestion` object:
-   - `rewritten_code`: improved version of the code
-4. Do not include `feedback` yet unless the interview is finished.
-5. At the end of the interview, provide **overall feedback** in `feedback`:
-   - strengths, weaknesses, suggestions, score, summary
-6. Always return JSON matching the Response schema:
-   - `content`: general speaking + next question
-   - `code_suggestion`: optional, only for coding answers
-   - `feedback`: optional, only at the end
-"""
-
-
 model = ChatOpenAI(
     model="gpt-4o",
     api_key=os.getenv("GITHUB_TOKEN"),
@@ -58,14 +40,6 @@ model = ChatOpenAI(
 checkpointer = InMemorySaver()
 
 
-agent = create_agent(
-    model=model,
-    checkpointer=checkpointer,
-    system_prompt=system_prompt,
-    response_format=ToolStrategy(Response),
-)
-
-
 class Interview:
     def __init__(
         self,
@@ -73,12 +47,14 @@ class Interview:
         cv_path: str,
         job_description: str,
         interviewer_personality: str = "Friendly",
+        language: str = "ar",
     ):
         self.session_id = session_id
         self.cv_file_path = cv_path
         self.job_desc = job_description
         self.interviewer_personality = interviewer_personality
         self.cv = self._load_cv()
+        self.agent = self._prepare_agent(language)
 
     def _load_cv(self) -> str:
         """Load and parse CV content"""
@@ -86,8 +62,40 @@ class Interview:
         docs = loader.load()
         return " ".join([doc.page_content for doc in docs])
 
+    def _prepare_agent(self, language):
+        system_prompt = f""" 
+            You are the AI interviewer [Brova]. (introduce yourself as Brova - AI interviewer)
+
+            Interview language: {"Arabic" if language=="ar" else "English"}
+
+            Conduct an interview with **dynamic 1–6 questions**, including technical and behavioral questions.
+            Ask **follow-up questions** when needed.
+
+            Rules:
+            1. Questions are based on CV, job description, and interviewer personality.
+            2. Respond **one at a time** to candidate answers, including general speaking context in `content`.
+            3. Always communicate in the selected interview language: {language}.
+            4. If the candidate’s answer contains **code**, provide a `code_suggestion` object:
+            - `rewritten_code`: improved version of the code
+            5. Do not include `feedback` yet unless the interview is finished.
+            6. At the end of the interview, provide **overall feedback** in `feedback`:
+            - strengths, weaknesses, suggestions, score, summary
+            7. Always return JSON matching the Response schema:
+            - `content`: general speaking + next question
+            - `code_suggestion`: optional, only for coding answers
+            - `feedback`: optional, only at the end
+            """
+
+        agent = create_agent(
+            model=model,
+            checkpointer=checkpointer,
+            system_prompt=system_prompt,
+            response_format=ToolStrategy(Response),
+        )
+        return agent
+
     def start(self):
-        res = agent.invoke(
+        res = self.agent.invoke(
             {
                 "messages": [
                     {
@@ -101,7 +109,7 @@ class Interview:
         return res
 
     def answer(self, candidate_response: str):
-        res = agent.invoke(
+        res = self.agent.invoke(
             {
                 "messages": [
                     {

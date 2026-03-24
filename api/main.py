@@ -1,4 +1,5 @@
 import base64
+from re import S
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict
@@ -19,30 +20,54 @@ app.add_middleware(
 
 
 interview_sessions: Dict[str, Interview] = {}
-audio_component = InterviewAudioComponent()
 
 
 @app.get("/")
 async def root():
     return {
-        "message": "AI Interview API",
+        "message": "AI Interview API (Brova)",
         "version": "1.0.0",
+        "flow": [
+            "1. POST /interview/setup → create session",
+            "2. GET /interview/next_question?session_id=... → get first/next question",
+            "3. POST /interview/next_question → submit answer (audio/code) and get next question",
+        ],
         "endpoints": {
-            "POST /interview/start": "Upload CV + params, return first question (text + audio base64)",
-            "POST /interview/answer": "Submit audio answer; returns transcription and next question (text + audio base64)",
+            "POST /interview/setup": {
+                "description": "Initialize interview session",
+                "inputs": [
+                    "cv (PDF file)",
+                    "job_description",
+                    "interviewer_personality",
+                    "language",
+                    "gender",
+                ],
+                "output": ["session_id"],
+            },
+            "GET /interview/next_question": {
+                "description": "Fetch current/next question",
+                "params": ["session_id"],
+                "output": ["structured_response", "audio_base64"],
+            },
+            "POST /interview/next_question": {
+                "description": "Submit answer and get next question",
+                "inputs": ["session_id", "audio_file (optional)", "code (optional)"],
+                "output": ["structured_response", "audio_base64"],
+            },
         },
     }
 
 
-@app.post("/interview/start")
+@app.post("/interview/setup")
 async def start_interview(
     cv: UploadFile = File(...),
     job_description: str = Form("AI Engineer"),
     interviewer_personality: str = Form("Friendly"),
+    language: str = Form("en"),
+    gender: str = Form("female"),
 ):
 
     try:
-        # validate file
         if not cv.filename.endswith(".pdf"):
             raise HTTPException(status_code=400, detail="Only PDF files are accepted")
 
@@ -60,6 +85,7 @@ async def start_interview(
             cv_path=cv_path,
             job_description=job_description,
             interviewer_personality=interviewer_personality,
+            language=language,
         )
 
         interview_sessions[session_id] = {
@@ -68,36 +94,52 @@ async def start_interview(
             "status": "in_progress",
             "job_description": job_description,
             "interviewer_personality": interviewer_personality,
+            "audio_component": InterviewAudioComponent(language, gender),
         }
-
-        result = engine.start()
-        first_resp = result["structured_response"]
-        question_text = (
-            first_resp.content
-            if hasattr(first_resp, "content") and first_resp.content
-            else str(first_resp.feedback.summary)
-        )
-
-        # convert to audio
-        audio_bytes = audio_component.convert_text_to_speech(question_text)
-        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
-
         return {
             "session_id": session_id,
-            "question_text": question_text,
-            "audio_base64": audio_b64,
-            "full_response": result["structured_response"],
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# AUDIO answer endpoint
-@app.post("/interview/answer")
+@app.get("/interview/next_question")
+async def get_first_question(session_id: str):
+    try:
+        if session_id not in interview_sessions:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        engine = interview_sessions[session_id].get("engine")
+        if not engine:
+            raise HTTPException(status_code=400, detail="Interview not started")
+
+        result = engine.start()
+        answer = result["structured_response"]
+
+        question_text = (
+            answer.content
+            if hasattr(answer, "content") and answer.content
+            else str(answer.feedback.summary)
+        )
+
+        audio_component = interview_sessions[session_id].get("audio_component")
+        audio_bytes = audio_component.convert_text_to_speech(question_text)
+        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+
+        return {
+            "structured_response": result["structured_response"],
+            "audio_base64": audio_b64,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/interview/next_question")
 async def submit_answer_audio(
-    session_id: str = Form(...),
+    session_id: str,
     audio_file: UploadFile = File(...),
-    code: str = Form(...),
+    code: str = Form(None),
 ):
 
     try:
@@ -113,6 +155,7 @@ async def submit_answer_audio(
             f.write(content)
 
         # convert to text
+        audio_component = interview_sessions[session_id].get("audio_component")
         transcription = audio_component.convert_speech_to_text(audio_path)
         transcription = transcription + f"  {code}"
 
@@ -134,10 +177,8 @@ async def submit_answer_audio(
         audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
 
         return {
-            "session_id": session_id,
-            "question_text": question_text,
+            "structured_response": result["structured_response"],
             "audio_base64": audio_b64,
-            "full_response": result["structured_response"],
         }
 
     except Exception as e:
