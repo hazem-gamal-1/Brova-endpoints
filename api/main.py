@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict
 import os
 import uuid
-from api.interview import Interview
-from api.interview_audio_component import InterviewAudioComponent
+from interview import Interview
+from interview_audio_component import InterviewAudioComponent
 
 app = FastAPI(title="AI Interview API", version="1.0.0")
 

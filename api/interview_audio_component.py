@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 voices = {
-    "en": {"male": "dtSEyYGNJqjrtBArPCVZ", "female": "n7Wi4g1bhpw4Bs8HK5ph"},
-    "ar": {"male": "9SPZl4Mlgwj7QT4gVprb", "female": "L10lEremDiJfPicq5CPh"},
+    "en": {"male": "TX3LPaxmHKxFdv7VOQHJ", "female": "hpp4J3VqNfWAUOO0d1Us"},
+    "ar": {"male": "IES4nrmZdUBHByLBde0P", "female": "meAbY2VpJkt1q46qk56T"},
 }
 
 
