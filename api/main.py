@@ -138,7 +138,7 @@ async def get_first_question(session_id: str):
 @app.post("/interview/next_question")
 async def submit_answer_audio(
     session_id: str,
-    audio_file: UploadFile = File(...),
+    answer: str = Form(None),
     code: str = Form(None),
 ):
 
@@ -146,20 +146,10 @@ async def submit_answer_audio(
         if session_id not in interview_sessions:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        # save uploaded audio
-        TMP_DIR = "/tmp"
-        audio_path = f"{TMP_DIR}/{session_id}_{audio_file.filename}"
-        os.makedirs(TMP_DIR, exist_ok=True)
-        with open(audio_path, "wb") as f:
-            content = await audio_file.read()
-            f.write(content)
-
         # convert to text
         audio_component = interview_sessions[session_id].get("audio_component")
-        transcription = audio_component.convert_speech_to_text(audio_path)
-        transcription = transcription + f"  {code}"
 
-        os.remove(audio_path)
+        transcription = answer + f"  {code}"
 
         engine = interview_sessions[session_id].get("engine")
         if not engine:
