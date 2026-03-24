@@ -51,7 +51,7 @@ async def root():
             },
             "POST /interview/next_question": {
                 "description": "Submit answer and get next question",
-                "inputs": ["session_id", "audio_file (optional)", "code (optional)"],
+                "inputs": ["session_id", "answer (optional)", "code (optional)"],
                 "output": ["structured_response", "audio_base64"],
             },
         },
