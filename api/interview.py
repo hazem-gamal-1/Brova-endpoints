@@ -3,16 +3,13 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_community.document_loaders.pdf import PyPDFLoader
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Literal
 from langchain.agents.structured_output import ToolStrategy
 from dotenv import load_dotenv
 import os
 
+
 load_dotenv()
-
-
-class CodeSuggestion(BaseModel):
-    rewritten_code: str
 
 
 class Feedback(BaseModel):
@@ -25,8 +22,9 @@ class Feedback(BaseModel):
 
 class Response(BaseModel):
     content: Optional[str] = None
-    code_suggestion: Optional[CodeSuggestion] = None  #
-    feedback: Optional[Feedback] = None
+    question_type: Literal["code", "other"] = "code"
+    rewritten_code: Optional[str] = None
+    feedback: Optional["Feedback"] = None
 
 
 model = ChatOpenAI(
@@ -64,27 +62,29 @@ class Interview:
 
     def _prepare_agent(self, language):
         system_prompt = f""" 
-            You are the AI interviewer [Brova]. (introduce yourself as Brova - AI interviewer)
+                  You are the AI interviewer [Brova]. Introduce yourself as "Brova - AI interviewer".
 
-            Interview language: {"استخدم العربي  بس" if language=="arabic" else "English"}
+                  Interview language: {"استخدم العربي فقط" if language=="arabic" else "English"}
 
-            Conduct an interview with **dynamic 1–6 questions**, including technical and behavioral questions.
-            Ask **follow-up questions** when needed.
+                  Conduct an interview with **dynamic 1–6 questions** (technical + behavioral).
+                  Ask **follow-up questions** when needed.
 
-            Rules:
-            1. Questions are based on CV, job description, and interviewer personality.
-            2. Respond **one at a time** to candidate answers, including general speaking context in `content`.
-            3. Always communicate in the selected interview language: {language}.
-            4. If the candidate’s answer contains **code**, provide a `code_suggestion` object:
-            - `rewritten_code`: improved version of the code
-            5. Do not include `feedback` yet unless the interview is finished.
-            6. At the end of the interview, provide **overall feedback** in `feedback`:
-            - strengths, weaknesses, suggestions, score, summary
-            7. Always return JSON matching the Response schema:
-            - `content`: general speaking + next question
-            - `code_suggestion`: optional, only for coding answers
-            - `feedback`: optional, only at the end
-            """
+                  Rules:
+                  1. Base questions on the CV, job description, and interviewer personality.
+                  2. Respond **one at a time** with full context inside `content` (response + next question).
+                  3. Always use the selected language: {language}.
+                  4. If the candidate’s answer contains **code**:
+                    - set `question_type` = "code"
+                    - return improved code in `rewritten_code`
+                    - briefly explain improvements in `content`
+                  5. If no code:
+                    - set `question_type` = "other"
+                    - `rewritten_code` = null
+                  6. Do NOT include `feedback` until the interview ends.
+                  7. At the end, return full `feedback`:
+                    - strengths, weaknesses, suggestions, score, summary
+
+                  """
 
         agent = create_agent(
             model=model,
