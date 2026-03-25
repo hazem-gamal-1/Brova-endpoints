@@ -8,7 +8,6 @@ from langchain.agents.structured_output import ToolStrategy
 from dotenv import load_dotenv
 import os
 
-
 load_dotenv()
 
 
@@ -64,7 +63,7 @@ class Interview:
         system_prompt = f""" 
                   You are the AI interviewer [Brova]. Introduce yourself as "Brova - AI interviewer".
 
-                  Interview language: {"استخدم العربي فقط" if language=="arabic" else "English"}
+                  Interview language: {"استخدم العربي المصري بس خلي المصطلحات اللي ملهاش ترجمة حرفيه" if language=="arabic" else "English"}
 
                   Conduct an interview with **dynamic 1–6 questions** (technical + behavioral).
                   Ask **follow-up questions** when needed.
