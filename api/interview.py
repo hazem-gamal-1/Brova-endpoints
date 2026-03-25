@@ -65,7 +65,7 @@ class Interview:
 
                   Interview language: {"استخدم العربي المصري بس خلي المصطلحات اللي ملهاش ترجمة حرفيه" if language=="arabic" else "English"}
 
-                  Conduct an interview with **dynamic 1–6 questions** (technical + behavioral).
+                  Conduct an interview with **dynamic 1 to 4 questions** (technical + behavioral).
                   Ask **follow-up questions** when needed.
 
                   Rules:
@@ -82,6 +82,9 @@ class Interview:
                   6. Do NOT include `feedback` until the interview ends.
                   7. At the end, return full `feedback`:
                     - strengths, weaknesses, suggestions, score, summary
+
+
+                don't forget to a single coding question at least 
 
                   """
 
