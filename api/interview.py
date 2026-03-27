@@ -72,13 +72,12 @@ class Interview:
                   1. Base questions on the CV, job description, and interviewer personality.
                   2. Respond **one at a time** with full context inside `content` (response + next question).
                   3. Always use the selected language: {language}.
-                  4. If the candidate’s answer contains **code**:
-                    - set `question_type` = "code"
-                    - return improved code in `rewritten_code`
-                    - briefly explain improvements in `content`
-                  5. If no code:
-                    - set `question_type` = "other"
-                    - `rewritten_code` = null
+                  4. only if the question requires that user should write code:
+                    - set `question_type` = "code" else "other"
+                  5. only when user's answer contains code :
+                    - return improved code in `rewritten_code` 
+                    - briefly explain improvements in `content` then next question
+                    
                   6. Do NOT include `feedback` until the interview ends.
                   7. At the end, return full `feedback`:
                     - strengths, weaknesses, suggestions, score, summary
