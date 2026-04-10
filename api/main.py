@@ -1,6 +1,7 @@
 import base64
 from re import S
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict
 import os
@@ -123,13 +124,17 @@ async def get_first_question(session_id: str):
         )
 
         audio_component = interview_sessions[session_id].get("audio_component")
-        audio_bytes = audio_component.convert_text_to_speech(question_text)
-        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
 
-        return {
-            "structured_response": result["structured_response"],
-            "audio_base64": audio_b64,
-        }
+        def stream_audio():
+            """Stream audio chunks as they're generated"""
+            for chunk in audio_component.stream_text_to_speech(question_text):
+                yield chunk
+
+        return StreamingResponse(
+            stream_audio(),
+            media_type="audio/mpeg",
+            headers={"X-Structured-Response": str(result["structured_response"])},
+        )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -163,13 +168,17 @@ async def submit_answer_audio(
             if hasattr(answer, "content") and answer.content
             else str(answer.feedback.summary)
         )
-        audio_bytes = audio_component.convert_text_to_speech(question_text)
-        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
 
-        return {
-            "structured_response": result["structured_response"],
-            "audio_base64": audio_b64,
-        }
+        def stream_audio():
+            """Stream audio chunks as they're generated"""
+            for chunk in audio_component.stream_text_to_speech(question_text):
+                yield chunk
+
+        return StreamingResponse(
+            stream_audio(),
+            media_type="audio/mpeg",
+            headers={"X-Structured-Response": str(result["structured_response"])},
+        )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
