@@ -27,36 +27,73 @@ interview_sessions: Dict[str, Interview] = {}
 @app.get("/")
 async def root():
     return {
-        "message": "AI Interview API (Brova)",
+        "service": "Brova - AI Interview Platform",
         "version": "1.0.0",
-        "flow": [
-            "1. POST /interview/setup → create session",
-            "2. GET /interview/next_question?session_id=... → get first/next question",
-            "3. POST /interview/next_question → submit answer (audio/code) and get next question",
-        ],
+        "description": "RESTful API for conducting AI-powered technical interviews with real-time feedback and audio responses",
+        "base_path": "/interview",
+        "workflow": {
+            "step_1": "POST /interview/setup - Create interview session",
+            "step_2": "GET /interview/next_question - Retrieve first question with audio",
+            "step_3": "POST /interview/next_question - Submit answer and receive feedback with next question",
+        },
         "endpoints": {
             "POST /interview/setup": {
-                "description": "Initialize interview session",
-                "inputs": [
-                    "cv (PDF file)",
-                    "job_description",
-                    "interviewer_personality",
-                    "language",
-                    "gender",
-                ],
-                "output": ["session_id"],
+                "description": "Initialize a new interview session with candidate profile and job requirements",
+                "required_params": {
+                    "cv": "PDF file (candidate resume)",
+                    "job_description": "Target job description",
+                    "interviewer_personality": "Interviewer tone (e.g., Friendly, Formal, Technical)",
+                    "language": "Interview language (e.g., en, es, fr)",
+                    "gender": "Interviewer voice gender (male/female)",
+                },
+                "response": {
+                    "session_id": "Unique session identifier for interview tracking",
+                },
+                "status_codes": ["200", "400 - Invalid PDF", "500 - Server error"],
             },
             "GET /interview/next_question": {
-                "description": "Fetch current/next question",
-                "params": ["session_id"],
-                "output": ["structured_response", "audio_base64"],
+                "description": "Fetch the current or next interview question with streamed audio response",
+                "required_params": {
+                    "session_id": "Session identifier from setup endpoint",
+                },
+                "response": {
+                    "media_type": "audio/mpeg (streaming)",
+                    "headers": ["X-Structured-Response - Question data and metadata"],
+                },
+                "status_codes": [
+                    "200",
+                    "404 - Session not found",
+                    "500 - Server error",
+                ],
             },
             "POST /interview/next_question": {
-                "description": "Submit answer and get next question",
-                "inputs": ["session_id", "answer (optional)", "code (optional)"],
-                "output": ["structured_response", "audio_base64"],
+                "description": "Submit candidate answer and receive evaluation with next question and audio feedback",
+                "required_params": {
+                    "session_id": "Session identifier",
+                },
+                "optional_params": {
+                    "answer": "Text-based answer to the question",
+                    "code": "Code snippet (for technical questions)",
+                    "image": "Image file (for visual/diagram questions)",
+                },
+                "response": {
+                    "media_type": "audio/mpeg (streaming)",
+                    "headers": ["X-Structured-Response - Evaluation and next question"],
+                },
+                "status_codes": [
+                    "200",
+                    "404 - Session not found",
+                    "500 - Server error",
+                ],
             },
         },
+        "features": [
+            "Multi-format answer support (text, code, images)",
+            "Real-time audio streaming responses",
+            "Personality-driven interviewer tone",
+            "Multi-language interview support",
+            "Session-based interview tracking",
+        ],
     }
 
 
