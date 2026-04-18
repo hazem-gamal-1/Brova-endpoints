@@ -41,7 +41,3 @@ class InterviewImageHandler:
             
 
 
-
-
-image_handler = InterviewImageHandler() 
-print(image_handler.convert_image_to_text(r"E:\Langchain-projects\Brova\im.png"))    
