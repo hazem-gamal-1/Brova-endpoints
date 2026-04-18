@@ -192,6 +192,7 @@ async def submit_answer_audio(
 
         # convert to text
         audio_component = interview_sessions[session_id].get("audio_component")
+        image_text = ""
         if image:
             TMP_DIR = "/tmp"
             image_path = f"{TMP_DIR}/{session_id}_{image.filename}"
