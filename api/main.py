@@ -7,7 +7,8 @@ from typing import Dict
 import os
 import uuid
 from api.interview import Interview
-from api.interview_audio_component import InterviewAudioComponent
+from api.interview_audio_handler import InterviewAudioHandler
+from api.interview_image_handler import InterviewImageHandler
 
 app = FastAPI(title="AI Interview API", version="1.0.0")
 
@@ -95,7 +96,7 @@ async def start_interview(
             "status": "in_progress",
             "job_description": job_description,
             "interviewer_personality": interviewer_personality,
-            "audio_component": InterviewAudioComponent(gender),
+            "audio_component": InterviewAudioHandler(gender),
         }
         return {
             "session_id": session_id,
@@ -145,6 +146,7 @@ async def submit_answer_audio(
     session_id: str,
     answer: str = Form(None),
     code: str = Form(None),
+    image: UploadFile = File(None),
 ):
 
     try:
@@ -153,8 +155,16 @@ async def submit_answer_audio(
 
         # convert to text
         audio_component = interview_sessions[session_id].get("audio_component")
+        if image:
+            TMP_DIR = "/tmp"
+            image_path = f"{TMP_DIR}/{session_id}_{image.filename}"
+            os.makedirs(TMP_DIR, exist_ok=True)
+            with open(image_path, "wb") as f:
+                content = await image.read()
+                f.write(content)
+            image_text = InterviewImageHandler().convert_image_to_text(image_path)
 
-        transcription = answer + f"  {code}"
+        transcription = answer + f"  {code} + " + f"  {image_text if image else ''}"
 
         engine = interview_sessions[session_id].get("engine")
         if not engine:

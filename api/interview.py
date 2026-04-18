@@ -59,9 +59,8 @@ class Interview:
         docs = loader.load()
         return " ".join([doc.page_content for doc in docs])
 
-
     def _prepare_agent(self, language):
-            system_prompt = f"""
+        system_prompt = f"""
     You are Brova, an AI interviewer. Introduce yourself as "Brova - AI interviewer" in your first interaction.
 
     Interview language: {"استخدم العربي المصري بس خلي المصطلحات التقنية بالانجليزي زي ما هي" if language=="arabic" else "English"}
@@ -84,13 +83,13 @@ class Interview:
     - ONLY upon concluding the interview, return the full `feedback` object containing: strengths, weaknesses, suggestions, score, and summary.
     """
 
-            agent = create_agent(
-                model=model,
-                checkpointer=checkpointer,
-                system_prompt=system_prompt,
-                response_format=ToolStrategy(Response),
-            )
-            return agent
+        agent = create_agent(
+            model=model,
+            checkpointer=checkpointer,
+            system_prompt=system_prompt,
+            response_format=ToolStrategy(Response),
+        )
+        return agent
 
     def start(self):
         res = self.agent.invoke(

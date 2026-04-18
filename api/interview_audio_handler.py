@@ -8,7 +8,7 @@ load_dotenv()
 voices = {"male": "JBFqnCBsd6RMkjVDRZzb", "female": "FGY2WhTYpPnrIDTdsKH5"}
 
 
-class InterviewAudioComponent:
+class InterviewAudioHandler:
     def __init__(self, gender):
         self.elevenlabs = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
         self.voice_id = voices[gender]
