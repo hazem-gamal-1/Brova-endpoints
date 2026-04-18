@@ -201,7 +201,7 @@ async def submit_answer_audio(
                 f.write(content)
             image_text = InterviewImageHandler().convert_image_to_text(image_path)
 
-        transcription = answer + f"  {code} + " + f"  {image_text if image else ''}"
+        transcription = f"{answer or ''} {code or ''} {image_text if image else ''}"
 
         engine = interview_sessions[session_id].get("engine")
         if not engine:
