@@ -9,6 +9,7 @@ import uuid
 from api.interview import Interview
 from api.interview_audio_handler import InterviewAudioHandler
 from api.interview_image_handler import InterviewImageHandler
+import json
 
 app = FastAPI(title="AI Interview API", version="1.0.0")
 
@@ -168,10 +169,18 @@ async def get_first_question(session_id: str):
             for chunk in audio_component.stream_text_to_speech(question_text):
                 yield chunk
 
+        structured_json = json.dumps(
+            result["structured_response"].model_dump(), ensure_ascii=False
+        )
+
+        structured_b64 = base64.b64encode(structured_json.encode("utf-8")).decode(
+            "ascii"
+        )
+
         return StreamingResponse(
             stream_audio(),
             media_type="audio/mpeg",
-            headers={"X-Structured-Response": str(result["structured_response"])},
+            headers={"X-Structured-Response": structured_b64},
         )
 
     except Exception as e:
@@ -222,10 +231,18 @@ async def submit_answer_audio(
             for chunk in audio_component.stream_text_to_speech(question_text):
                 yield chunk
 
+        structured_json = json.dumps(
+            result["structured_response"].model_dump(), ensure_ascii=False
+        )
+
+        structured_b64 = base64.b64encode(structured_json.encode("utf-8")).decode(
+            "ascii"
+        )
+
         return StreamingResponse(
             stream_audio(),
             media_type="audio/mpeg",
-            headers={"X-Structured-Response": str(result["structured_response"])},
+            headers={"X-Structured-Response": structured_b64},
         )
 
     except Exception as e:
