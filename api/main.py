@@ -19,7 +19,9 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Structured-Response"],
 )
+
 
 
 interview_sessions: Dict[str, Interview] = {}
