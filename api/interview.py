@@ -66,7 +66,7 @@ class Interview:
         Interview language: {"استخدم العربي المصري بس خلي المصطلحات التقنية بالانجليزي زي ما هي" if language=="arabic" else "English"}
 
         Conduct a dynamic interview consisting of 1 to 4 questions (mixing technical and behavioral).
-        You MUST ask at least ONE coding question during the interview. Ask follow-up questions when needed.
+        You MUST ask at least ONE coding question and ONE drawing or sketching question during the interview. Ask follow-up questions when needed.
 
         Strict Operating Rules for Output Fields:
 
