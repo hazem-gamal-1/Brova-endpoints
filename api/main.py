@@ -19,7 +19,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Structured-Response"],
+    expose_headers=["X-Structured-Response", "X-Todos", "X-Current-Step-Index"],
 )
 
 
@@ -179,10 +179,20 @@ async def get_first_question(session_id: str):
             "ascii"
         )
 
+        todos_json = json.dumps(
+            getattr(result["structured_response"], "todos", []) or [], ensure_ascii=False
+        )
+        todos_b64 = base64.b64encode(todos_json.encode("utf-8")).decode("ascii")
+        current_step = str(getattr(result["structured_response"], "current_step_index", 0))
+
         return StreamingResponse(
             stream_audio(),
             media_type="audio/mpeg",
-            headers={"X-Structured-Response": structured_b64},
+            headers={
+                "X-Structured-Response": structured_b64,
+                "X-Todos": todos_b64,
+                "X-Current-Step-Index": current_step,
+            },
         )
 
     except Exception as e:
@@ -241,10 +251,20 @@ async def submit_answer_audio(
             "ascii"
         )
 
+        todos_json = json.dumps(
+            getattr(result["structured_response"], "todos", []) or [], ensure_ascii=False
+        )
+        todos_b64 = base64.b64encode(todos_json.encode("utf-8")).decode("ascii")
+        current_step = str(getattr(result["structured_response"], "current_step_index", 0))
+
         return StreamingResponse(
             stream_audio(),
             media_type="audio/mpeg",
-            headers={"X-Structured-Response": structured_b64},
+            headers={
+                "X-Structured-Response": structured_b64,
+                "X-Todos": todos_b64,
+                "X-Current-Step-Index": current_step,
+            },
         )
 
     except Exception as e:
