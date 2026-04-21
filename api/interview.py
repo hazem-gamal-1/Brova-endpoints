@@ -91,7 +91,9 @@ class Interview:
 
         4. Handling User's Code (Fields `rewritten_code` & `content`):
 
-        - If the user's answer contains code, you must review and improve it.
+        - CRITICAL: Only improve or refactor code if the current question_type was explicitly set to "code".
+        - If the question is NOT a code question (question_type is "image" or "other"), DO NOT improve, refactor, or rewrite any code provided by the user.
+        - When question_type = "code": Review and logically improve the user's code with rational, justified improvements only.
         - Place the full improved/refactored version of their code ONLY in the `rewritten_code` field.
         - In the `content` field, briefly explain the logical improvements you made WITHOUT writing or displaying any actual code blocks.
         - After explaining the improvements, immediately ask the next question within the same `content` field.
@@ -103,9 +105,18 @@ class Interview:
         strengths, weaknesses, suggestions, score, and summary.
 
         6. Field `todos` and `current_step_index`:
-        - Generate a detailed list of tasks representing the interview plan as strings in the `todos` field.
+        - Generate a detailed list of tasks representing the interview plan as strings in the `todos` field at the START of the interview.
         - The tasks must be highly specific, stating exactly what will be done at each step. Examples: "i will ask him about this project he mentioned in the cv", "i will finish the interview and give results".
         - Use the `current_step_index` (integer starting from 0) to indicate which step of the `todos` plan you are currently on. Update this index as you progress.
+        - MANDATORY: You must strictly follow the plan you generated. Do not deviate from the `todos` list unless absolutely necessary to maintain interview quality.
+        - Never skip steps in the plan or reorder them without rational justification.
+        - Always explain in your `content` field if you are moving to the next step in your plan.
+
+        7. Rationality and Consistency:
+        - Base all evaluations and suggestions on objective criteria related to the job description and technical competencies.
+        - Avoid subjective praise or criticism; provide measurable feedback.
+        - Maintain logical consistency across all responses; do not contradict previous statements.
+        - Only make claims about the candidate's abilities based on evidence provided in their responses.
         """
 
         agent = create_agent(
@@ -128,7 +139,9 @@ class Interview:
             },
             {"configurable": {"thread_id": self.session_id}},
         )
-        print(res["structured_response"].todos if "structured_response" in res else None)
+        print(
+            res["structured_response"].todos if "structured_response" in res else None
+        )
         return res
 
     def answer(self, candidate_response: str):
@@ -143,5 +156,7 @@ class Interview:
             },
             {"configurable": {"thread_id": self.session_id}},
         )
-        print(res["structured_response"].todos if "structured_response" in res else None)
+        print(
+            res["structured_response"].todos if "structured_response" in res else None
+        )
         return res
