@@ -19,17 +19,13 @@ class Feedback(BaseModel):
     summary: str
 
 
-class TodoItem(BaseModel):
-    task: str
-    completed: bool
-
-
 class Response(BaseModel):
     content: Optional[str] = None
     question_type: Literal["code", "image", "other"] = "code"
     rewritten_code: Optional[str] = None
     feedback: Optional["Feedback"] = None
-    todos: Optional[List[TodoItem]] = None
+    todos: Optional[List[str]] = None
+    current_step_index: int = 0
 
 
 model = ChatOpenAI(
@@ -106,10 +102,10 @@ class Interview:
         - ONLY upon concluding the interview, return the full `feedback` object containing:
         strengths, weaknesses, suggestions, score, and summary.
 
-        6. Field `todos`:
-        - Maintain a list of tasks representing the interview plan (e.g., "Behavioral question", "Code question", "Drawing question") in the `todos` field.
-        - Generate this plan at the start of the interview.
-        - Continuously update this list with each turn, marking `completed: true` for tasks that have been finished.
+        6. Field `todos` and `current_step_index`:
+        - Generate a detailed list of tasks representing the interview plan as strings in the `todos` field.
+        - The tasks must be highly specific, stating exactly what will be done at each step. Examples: "i will ask him about this project he mentioned in the cv", "i will finish the interview and give results".
+        - Use the `current_step_index` (integer starting from 0) to indicate which step of the `todos` plan you are currently on. Update this index as you progress.
         """
 
         agent = create_agent(
