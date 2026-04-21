@@ -19,11 +19,17 @@ class Feedback(BaseModel):
     summary: str
 
 
+class TodoItem(BaseModel):
+    task: str
+    completed: bool
+
+
 class Response(BaseModel):
     content: Optional[str] = None
     question_type: Literal["code", "image", "other"] = "code"
     rewritten_code: Optional[str] = None
     feedback: Optional["Feedback"] = None
+    todos: Optional[List[TodoItem]] = None
 
 
 model = ChatOpenAI(
@@ -99,6 +105,11 @@ class Interview:
         - Do NOT populate the `feedback` field during the active interview.
         - ONLY upon concluding the interview, return the full `feedback` object containing:
         strengths, weaknesses, suggestions, score, and summary.
+
+        6. Field `todos`:
+        - Maintain a list of tasks representing the interview plan (e.g., "Behavioral question", "Code question", "Drawing question") in the `todos` field.
+        - Generate this plan at the start of the interview.
+        - Continuously update this list with each turn, marking `completed: true` for tasks that have been finished.
         """
 
         agent = create_agent(
@@ -121,6 +132,7 @@ class Interview:
             },
             {"configurable": {"thread_id": self.session_id}},
         )
+        print(res["structured_response"].todos if "structured_response" in res else None)
         return res
 
     def answer(self, candidate_response: str):
@@ -135,4 +147,5 @@ class Interview:
             },
             {"configurable": {"thread_id": self.session_id}},
         )
+        print(res["structured_response"].todos if "structured_response" in res else None)
         return res
