@@ -76,7 +76,7 @@ class Interview:
         Base all questions on the provided CV, job description, and your assigned interviewer personality.
 
         2. Field `content`:
-        Respond one turn at a time. Put your conversational response and the next question entirely inside this field.
+        Respond one turn at a time. Put your conversational response and the next question entirely inside this field. (don't include interview plan in this Field (content Field ))
 
         3. Field `question_type`:
 
@@ -110,7 +110,7 @@ class Interview:
         - Use the `current_step_index` (integer starting from 0) to indicate which step of the `todos` plan you are currently on. Update this index as you progress.
         - MANDATORY: You must strictly follow the plan you generated. Do not deviate from the `todos` list unless absolutely necessary to maintain interview quality.
         - Never skip steps in the plan or reorder them without rational justification.
-        - Always explain in your `content` field if you are moving to the next step in your plan.
+        - CRITICAL: Keep the plan INTERNAL. Generate and follow the plan silently. Do NOT mention question_type, interview plan, todos, or steps in the `content` field. The user should have a natural conversation without knowing about the plan structure.
 
         7. Rationality and Consistency:
         - Base all evaluations and suggestions on objective criteria related to the job description and technical competencies.
