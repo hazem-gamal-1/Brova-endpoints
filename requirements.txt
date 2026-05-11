@@ -11,3 +11,6 @@ elevenlabs
 python-dotenv
 langchain_google_genai
 python-multipart
+deepeval
+pytest-html
+httpx
