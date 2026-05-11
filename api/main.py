@@ -6,9 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict
 import os
 import uuid
-from interview import Interview
-from interview_audio_handler import InterviewAudioHandler
-from interview_image_handler import InterviewImageHandler
+from api.interview import Interview
+from api.interview_audio_handler import InterviewAudioHandler
+from api.interview_image_handler import InterviewImageHandler
 import json
 
 app = FastAPI(title="AI Interview API", version="1.0.0")
