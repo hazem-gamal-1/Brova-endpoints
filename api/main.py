@@ -1,5 +1,6 @@
 import base64
-from re import S
+import logging
+import traceback
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +11,19 @@ from api.interview import Interview
 from api.interview_audio_handler import InterviewAudioHandler
 from api.interview_image_handler import InterviewImageHandler
 import json
+
+# ---------------------------------------------------------------------------
+# Logging — Vercel captures stdout/stderr from the function runtime.
+# Using basicConfig with force=True ensures the handler is always attached
+# even if something else already initialised the root logger.
+# ---------------------------------------------------------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    force=True,
+)
+logger = logging.getLogger(__name__)
+
 
 app = FastAPI(title="AI Interview API", version="1.0.0")
 
@@ -23,9 +37,26 @@ app.add_middleware(
 )
 
 
-
 interview_sessions: Dict[str, Interview] = {}
 
+
+# ---------------------------------------------------------------------------
+# Helper — re-raises HTTPException untouched, logs & wraps everything else.
+# ---------------------------------------------------------------------------
+def _handle_error(route: str, exc: Exception) -> None:
+    """Log the full traceback to Vercel's function logs, then raise HTTP 500."""
+    if isinstance(exc, HTTPException):
+        # Expected errors (404, 400…) — no traceback needed, just re-raise.
+        raise exc
+    logger.error(
+        "Unhandled exception in %s:\n%s", route, traceback.format_exc()
+    )
+    raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 
 @app.get("/")
 async def root():
@@ -108,7 +139,7 @@ async def start_interview(
     language: str = Form("en"),
     gender: str = Form("female"),
 ):
-
+    logger.info("POST /interview/setup — file=%s job=%s", cv.filename, job_description)
     try:
         if not cv.filename.endswith(".pdf"):
             raise HTTPException(status_code=400, detail="Only PDF files are accepted")
@@ -138,15 +169,17 @@ async def start_interview(
             "interviewer_personality": interviewer_personality,
             "audio_component": InterviewAudioHandler(gender),
         }
-        return {
-            "session_id": session_id,
-        }
+
+        logger.info("Session created: %s", session_id)
+        return {"session_id": session_id}
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _handle_error("POST /interview/setup", e)
 
 
 @app.get("/interview/next_question")
 async def get_first_question(session_id: str):
+    logger.info("GET /interview/next_question — session=%s", session_id)
     try:
         if session_id not in interview_sessions:
             raise HTTPException(status_code=404, detail="Session not found")
@@ -156,35 +189,35 @@ async def get_first_question(session_id: str):
             raise HTTPException(status_code=400, detail="Interview not started")
 
         result = engine.start()
-        answer = result["structured_response"]
+        structured_response = result["structured_response"]
 
         question_text = (
-            answer.content
-            if hasattr(answer, "content") and answer.content
-            else str(answer.feedback.summary)
+            structured_response.content
+            if hasattr(structured_response, "content") and structured_response.content
+            else str(structured_response.feedback.summary)
         )
 
         audio_component = interview_sessions[session_id].get("audio_component")
 
         def stream_audio():
-            """Stream audio chunks as they're generated"""
             for chunk in audio_component.stream_text_to_speech(question_text):
                 yield chunk
 
         structured_json = json.dumps(
-            result["structured_response"].model_dump(), ensure_ascii=False
+            structured_response.model_dump(), ensure_ascii=False
         )
-
-        structured_b64 = base64.b64encode(structured_json.encode("utf-8")).decode(
-            "ascii"
-        )
+        structured_b64 = base64.b64encode(structured_json.encode("utf-8")).decode("ascii")
 
         todos_json = json.dumps(
-            getattr(result["structured_response"], "todos", []) or [], ensure_ascii=False
+            getattr(structured_response, "todos", []) or [], ensure_ascii=False
         )
         todos_b64 = base64.b64encode(todos_json.encode("utf-8")).decode("ascii")
-        current_step = str(getattr(result["structured_response"], "current_step_index", 0))
+        current_step = str(getattr(structured_response, "current_step_index", 0))
 
+        logger.info(
+            "GET /interview/next_question OK — session=%s step=%s",
+            session_id, current_step,
+        )
         return StreamingResponse(
             stream_audio(),
             media_type="audio/mpeg",
@@ -196,7 +229,7 @@ async def get_first_question(session_id: str):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _handle_error("GET /interview/next_question", e)
 
 
 @app.post("/interview/next_question")
@@ -206,13 +239,16 @@ async def submit_answer_audio(
     code: str = Form(None),
     image: UploadFile = File(None),
 ):
-
+    logger.info(
+        "POST /interview/next_question — session=%s has_answer=%s has_code=%s has_image=%s",
+        session_id, bool(answer), bool(code), bool(image),
+    )
     try:
         if session_id not in interview_sessions:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        # convert to text
         audio_component = interview_sessions[session_id].get("audio_component")
+
         image_text = ""
         if image:
             TMP_DIR = "/tmp"
@@ -223,40 +259,40 @@ async def submit_answer_audio(
                 f.write(content)
             image_text = InterviewImageHandler().convert_image_to_text(image_path)
 
-        transcription = f"{answer or ''} {code or ''} {image_text if image else ''}"
+        transcription = f"{answer or ''} {code or ''} {image_text if image else ''}".strip()
 
         engine = interview_sessions[session_id].get("engine")
         if not engine:
             raise HTTPException(status_code=400, detail="Interview not started")
 
         result = engine.answer(transcription)
-        answer = result["structured_response"]
+        structured_response = result["structured_response"]
 
         question_text = (
-            answer.content
-            if hasattr(answer, "content") and answer.content
-            else str(answer.feedback.summary)
+            structured_response.content
+            if hasattr(structured_response, "content") and structured_response.content
+            else str(structured_response.feedback.summary)
         )
 
         def stream_audio():
-            """Stream audio chunks as they're generated"""
             for chunk in audio_component.stream_text_to_speech(question_text):
                 yield chunk
 
         structured_json = json.dumps(
-            result["structured_response"].model_dump(), ensure_ascii=False
+            structured_response.model_dump(), ensure_ascii=False
         )
-
-        structured_b64 = base64.b64encode(structured_json.encode("utf-8")).decode(
-            "ascii"
-        )
+        structured_b64 = base64.b64encode(structured_json.encode("utf-8")).decode("ascii")
 
         todos_json = json.dumps(
-            getattr(result["structured_response"], "todos", []) or [], ensure_ascii=False
+            getattr(structured_response, "todos", []) or [], ensure_ascii=False
         )
         todos_b64 = base64.b64encode(todos_json.encode("utf-8")).decode("ascii")
-        current_step = str(getattr(result["structured_response"], "current_step_index", 0))
+        current_step = str(getattr(structured_response, "current_step_index", 0))
 
+        logger.info(
+            "POST /interview/next_question OK — session=%s step=%s",
+            session_id, current_step,
+        )
         return StreamingResponse(
             stream_audio(),
             media_type="audio/mpeg",
@@ -268,4 +304,4 @@ async def submit_answer_audio(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _handle_error("POST /interview/next_question", e)
