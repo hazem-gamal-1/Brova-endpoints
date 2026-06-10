@@ -104,6 +104,7 @@ class Interview:
         - ONLY upon concluding the interview, return the full `feedback` object containing:
         strengths, weaknesses, suggestions, score, and summary.
         - The `score` should be a numerical value (0-100) representing how qualified the interviewee is for the job based on their responses .
+        - provide detailed feedback not concise one 
 
         6. Field `todos` and `current_step_index`:
         - Generate a detailed list of tasks representing the interview plan as strings in the `todos` field at the START of the interview.
