@@ -33,7 +33,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Structured-Response", "X-Todos", "X-Current-Step-Index"],
+    expose_headers=["X-Structured-Response", "X-Current-Step-Index"],
 )
 
 interview_sessions: Dict[str, Interview] = {}
@@ -83,9 +83,6 @@ def _build_streaming_response(structured_response, audio_component) -> Streaming
         json.dumps(structured_response.model_dump(), ensure_ascii=False).encode("utf-8")
     ).decode("ascii")
 
-    todos_b64 = base64.b64encode(
-        json.dumps(getattr(structured_response, "todos", []) or [], ensure_ascii=False).encode("utf-8")
-    ).decode("ascii")
 
     current_step = str(getattr(structured_response, "current_step_index", 0))
 
@@ -98,7 +95,6 @@ def _build_streaming_response(structured_response, audio_component) -> Streaming
         media_type="audio/mpeg",
         headers={
             "X-Structured-Response": structured_b64,
-            "X-Todos": todos_b64,
             "X-Current-Step-Index": current_step,
         },
     )
