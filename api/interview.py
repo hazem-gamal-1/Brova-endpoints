@@ -29,10 +29,10 @@ class Response(BaseModel):
 
 
 model = ChatOpenAI(
-    model="gpt-4o",
+    model=os.getenv("MODEL_NAME"),
     api_key=os.getenv("GITHUB_TOKEN"),
     base_url="https://models.inference.ai.azure.com",
-    temperature=0.8,
+    temperature=0.6,
 )
 
 

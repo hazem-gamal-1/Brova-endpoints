@@ -10,7 +10,7 @@ DEFAULT_IMAGE_MODEL = ChatOpenAI(
     model="gpt-4o",
     api_key=os.getenv("GITHUB_TOKEN"),
     base_url="https://models.inference.ai.azure.com",
-    temperature=0.8,
+    temperature=0.6,
 )
 
 
@@ -19,25 +19,19 @@ class InterviewImageHandler:
         self.model = DEFAULT_IMAGE_MODEL
 
     def convert_image_to_text(self, image_path) -> str:
-        image=self._encode_image(image_path)
+        image = self._encode_image(image_path)
         message = HumanMessage(
             content=[
                 {"type": "text", "text": "Describe this image."},
                 {
                     "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/png;base64,{image}"
-                    },
+                    "image_url": {"url": f"data:image/png;base64,{image}"},
                 },
             ]
         )
         response = self.model.invoke([message])
         return response.content
-    
 
-    def _encode_image(self,image_path):
+    def _encode_image(self, image_path):
         with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
-            
-
-
+            return base64.b64encode(image_file.read()).decode("utf-8")
