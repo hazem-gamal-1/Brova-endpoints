@@ -35,42 +35,42 @@ After every session, Brova generates a detailed performance report evaluating yo
 ### Step 1 — CV Upload
 Upload your resume so the AI can tailor every question to your background.
 
-![CV Upload](brova-screenshots/1.jpeg)
+![CV Upload](brova-screenshots/1.jpg)
 
 ---
 
 ### Step 2 — Language & Interviewer
 Choose your interview language (Arabic / English) and pick your preferred interviewer persona.
 
-![Language & Gender](brova-screenshots/2.jpeg)
+![Language & Gender](brova-screenshots/2.jpg)
 
 ---
 
 ### Step 3 — Personality & Role
 Set the interviewer's style — Friendly, Professional, Tough, or Casual — and define the skills and job role you're targeting.
 
-![Personality & Role](brova-screenshots/3.jpeg)
+![Personality & Role](brova-screenshots/3.jpg)
 
 ---
 
 ### Live AI Interview Session
 Talk with the AI avatar in real time. Voice input is transcribed automatically and the avatar responds naturally with follow-up questions.
 
-![AI Interview](brova-screenshots/4.jpeg)
+![AI Interview](brova-screenshots/4.jpg)
 
 ---
 
 ### Live Coding Canvas
 Solve coding challenges inside the session with a full in-browser IDE and real-time execution.
 
-![Live Coding](brova-screenshots/5.jpeg)
+![Live Coding](brova-screenshots/5.jpg)
 
 ---
 
 ### Drawing Canvas
 Sketch system architecture or diagrams and have the AI analyse and evaluate them instantly.
 
-![Drawing Canvas](brova-screenshots/6.jpeg)
+![Drawing Canvas](brova-screenshots/6.jpg)
 
 ---
 
