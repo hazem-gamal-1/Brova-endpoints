@@ -21,7 +21,7 @@ class Feedback(BaseModel):
 
 class Response(BaseModel):
     content: Optional[str] = None
-    question_type: Literal["code", "image", "other"] = "code"
+    question_type: Literal["code", "image", "other"] = "other"
     feedback: Optional["Feedback"] = None
     current_step_index: int = 0
 
@@ -98,6 +98,8 @@ class Interview:
 
 
         if user asks to end the interview or provide feedback ends the interview and provide the feedback 
+
+        make sure of the question_type
         """
 
         agent = create_agent(
