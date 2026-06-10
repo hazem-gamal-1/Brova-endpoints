@@ -120,9 +120,6 @@ class Interview:
             },
             {"configurable": {"thread_id": self.session_id}},
         )
-        print(
-            res["structured_response"].todos if "structured_response" in res else None
-        )
         return res
 
     def answer(self, candidate_response: str):
@@ -137,7 +134,6 @@ class Interview:
             },
             {"configurable": {"thread_id": self.session_id}},
         )
-        print(
-            res["structured_response"].todos if "structured_response" in res else None
-        )
+   
+
         return res
